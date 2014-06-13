@@ -2,15 +2,16 @@ jobexec
 =======
 
 
-NAME
+##NAME
        jobexec - command line batch job executor
 
-SYNOPSYS
+##SYNOPSYS
+```
        jobexec <command> <cmd param 1> <cmd param 2> ...
        jobexec "<command with parameters to be executed through a shell>"
+```
 
-
-DESCRIPTION
+##DESCRIPTION
        The  aim  of  this utility is to be invoqued from a cron or from other unattended process as a
        way to keep track of the execution of a batch job. It will execute its parameters and redirect
        stdout and stderr to files in a directory created into /var/tmp/jobexec/
@@ -19,46 +20,47 @@ DESCRIPTION
        tion can be audited and or monitored.
 
 
-FILES
-       /var/tmp/jobexec/<processname>.<hash>.<timestamp>/
+##FILES
+       `/var/tmp/jobexec/<processname>.<hash>.<timestamp>/'
               "basedir" directory where the following status files related to the job will be left
 
-       <basedir>/command
+       `<basedir>/command`
               the command line that was run
 
-       <basedir>/stdout
+       `<basedir>/stdout`
               stdout job output
 
-       <basedir>/stderr
+       `<basedir>/stderr`
               stderr job output
 
-       <basedir>/running
+       `<basedir>/running`
               if present, the job is running, and the file contains the pid
 
-       <basedir>/finished
+       `<basedir>/finished`
               if present, the job finished, and the file contains the error level
 
-       <basedir>/failed
+       `<basedir>/failed`
               if present, the job failed to run (it couldnt be executed)
 
-       <basedir>/bad_exit_status
+       `<basedir>/bad_exit_status`
               if present, the job finished with an exit status other than 0
 
 
-AUTHOR
+##AUTHOR
        Alejandro Dau - adaulab at gmail dot com
 
 
-BUGS
+##BUGS
        It will leave output in disk, so it will accumulate over time. You can leave the expiration of
        the files up to the OS (some Unixes have a regular process that deletes unaccesed files in the
        /tmp and /var/tmp dirs).  Or you can add the following to your crontab to delete  all  reports
        older than 5 days:
 
+```
        7 5 * * * jobexec find /var/tmp/jobexec/ -mtime +5 -delete -print
+```
 
 
 
 
 
-0.1                                          13 Jun 2014                                   jobexec(1)
