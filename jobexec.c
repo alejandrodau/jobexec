@@ -17,7 +17,7 @@ extern char **environ;
 char dir[MAXDIRLEN];
 
 
-int createOutputDir(int argc, char* argv[]){
+void createOutputDir(int argc, char* argv[]){
 
    int l,i,j;
   char cmdline[MAXCMDLEN];
@@ -33,6 +33,10 @@ int createOutputDir(int argc, char* argv[]){
 		   cmdline[j]=c;
 		   j++;
 	   }
+
+           // the next if is to skip the path of the command in the dirname
+           if (l==1 && c=='/')  j = 0; 
+
 	   i++;
 	}
   }	
@@ -40,41 +44,59 @@ int createOutputDir(int argc, char* argv[]){
   cmdline[j]=0;
   hash = hashstr(cmdline, 5);
   assertnlog(hash != NULL, "malloc hashstr");
-//  printf("%s.%s.%ju\n", cmdline, hash, time(NULL));
-
 
   snprintf(dir, sizeof(dir), "%s", BASEDIR);
   if( access( dir, F_OK ) == -1 ) {
     // create dir
-//    printf("making dir: %s\n", dir);
     assertnlog2(!mkdir(dir, S_IRWXU), "mkdir BASEDIR", dir);
     assertnlog2(!chmod(dir, S_IRWXU | S_IRWXG | S_IRWXO| S_ISVTX), "chmod BASEDIR", dir);
   } 
 
   l = strlen(dir);
+  //shorten the cmdline string to be used in dir
+  cmdline[16]='\0';
   snprintf(&dir[l], sizeof(dir)-l, "/%s.%s.%ju", cmdline, hash, time(NULL) );
   if( access( dir, F_OK ) == -1 ) {
     // create dir
 //    printf("making dir: %s\n", dir);
-    assertnlog2(!mkdir(dir, 00755), "mkdir BASEDIR", dir);
+    assertnlog2(!mkdir(dir, 00755), "mkdir dir", dir);
   } 
 
- 
 } 
+
 
 int main(int argc, char *argv[]) {
 
-   int fd;
+   int fd1, fd2, l;
+   FILE *f;
    char tmpstr[sizeof(dir)+20];
  
    assertnlog(argc > 1, "arguments: command");
 
    createOutputDir(argc, argv);
 
+// write command file
+   snprintf(tmpstr, sizeof(tmpstr), "%s/command", dir);
+   f = fopen(tmpstr, "w");
+   assertnlog2(f != NULL, "fopen outfile", tmpstr);
+
+   for (l=1; l<argc; l++) {
+	fprintf( f, "%s ", argv[l]);
+   }
+   fprintf(f, "\n");
+   fclose(f);
+
+
+// create stdout file
+   snprintf(tmpstr, sizeof(tmpstr), "%s/stdout", dir);
+   fd1 = open(tmpstr, O_WRONLY | O_CREAT, 00644);
+   assertnlog2(fd1 >= 0, "fopen outfile", tmpstr);
+
+// create stderr file
+   snprintf(tmpstr, sizeof(tmpstr), "%s/stderr", dir);
+   fd2 = open(tmpstr, O_WRONLY | O_CREAT, 00644);
+   assertnlog2(fd2 >= 0, "fopen outfile", tmpstr);
    
-   snprintf(tmpstr, sizeof(tmpstr), "%s/outfile", dir);
-   fd = open(tmpstr, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-   assertnlog2(fd >= 0, "fopen outfile", tmpstr);
    
    
    pid_t childPID;
@@ -84,9 +106,11 @@ int main(int argc, char *argv[]) {
 
    if(childPID == 0) // child process
         {
-	    assertnlog(dup2(fd, STDOUT_FILENO) != -1, "error duping");
+	    assertnlog(dup2(fd1, STDOUT_FILENO) != -1, "error duping stdout");
+	    assertnlog(dup2(fd2, STDERR_FILENO) != -1, "error duping stderr");
 
-	    close(fd);
+	    close(fd1);
+	    close(fd2);
 
             execve(argv[1], &argv[1], environ);
             assertnlog2(0, "Exec failed, command not found", argv[1]);
