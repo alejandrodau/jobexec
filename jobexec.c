@@ -124,6 +124,13 @@ int main(int argc, char *argv[]) {
 		exit (-1);
 	    }
 //	    printf("\n cmd %s pid %d exited %d with status %d (%d)\n", argv[1], childPID, WIFEXITED(status), WEXITSTATUS(status), status);
+	   // write finished file
+	   snprintf(tmpstr, sizeof(tmpstr), "%s/finished", dir);
+	   f = fopen(tmpstr, "w");
+	   assertnlog2(f != NULL, "fopen outfile", tmpstr);
+	   fprintf(f, "%d\n", WEXITSTATUS(status));
+	   fclose(f);
+
         }
 
    return 0; 
