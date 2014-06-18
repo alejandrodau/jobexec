@@ -127,9 +127,18 @@ int main(int argc, char *argv[]) {
 	   // write finished file
 	   snprintf(tmpstr, sizeof(tmpstr), "%s/finished", dir);
 	   f = fopen(tmpstr, "w");
-	   assertnlog2(f != NULL, "fopen outfile", tmpstr);
+	   assertnlog2(f != NULL, "fopen finished", tmpstr);
 	   fprintf(f, "%d\n", WEXITSTATUS(status));
 	   fclose(f);
+
+	   // write bad_exit_status if status != 0
+	   if (WEXITSTATUS(status) != 0) {
+	           snprintf(tmpstr, sizeof(tmpstr), "%s/bad_exit_status", dir);
+		   f = fopen(tmpstr, "w");
+		   assertnlog2(f != NULL, "fopen ", tmpstr);
+		   fprintf(f, "%d\n", WEXITSTATUS(status));
+		   fclose(f);
+	   }
 
         }
 
