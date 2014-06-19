@@ -45,9 +45,9 @@ void createOutputDir(int argc, char* argv[]){
   hash = hashstr(cmdline, 5);
   assertnlog(hash != NULL, "malloc hashstr");
 
+  // create jobexec dir
   snprintf(dir, sizeof(dir), "%s", BASEDIR);
   if( access( dir, F_OK ) == -1 ) {
-    // create dir
     assertnlog2(!mkdir(dir, S_IRWXU), "mkdir BASEDIR", dir);
     assertnlog2(!chmod(dir, S_IRWXU | S_IRWXG | S_IRWXO| S_ISVTX), "chmod BASEDIR", dir);
   } 
@@ -55,7 +55,7 @@ void createOutputDir(int argc, char* argv[]){
   l = strlen(dir);
   //shorten the cmdline string to be used in dir
   cmdline[16]='\0';
-  snprintf(&dir[l], sizeof(dir)-l, "/%s.%s.%ju", cmdline, hash, time(NULL) );
+  snprintf(&dir[l], sizeof(dir)-l, "/%ju.%s.%s", time(NULL), cmdline, hash );
   if( access( dir, F_OK ) == -1 ) {
     // create dir
 //    printf("making dir: %s\n", dir);
@@ -71,7 +71,12 @@ int main(int argc, char *argv[]) {
    FILE *f;
    char tmpstr[sizeof(dir)+20];
  
-   assertnlog(argc > 1, "arguments: command");
+// usage:
+   if (argc < 2) { 
+	printf("usage: %s <command> <cmd param 1> <cmd param 2> ...\n", argv[0]);
+	printf("\nmore information: man %s\n", argv[0]);
+	exit(0);
+   }
 
    createOutputDir(argc, argv);
 
@@ -97,8 +102,7 @@ int main(int argc, char *argv[]) {
    fd2 = open(tmpstr, O_WRONLY | O_CREAT, 00644);
    assertnlog2(fd2 >= 0, "fopen outfile", tmpstr);
    
-   
-   
+
    pid_t childPID;
    childPID = fork();
 
@@ -114,13 +118,22 @@ int main(int argc, char *argv[]) {
 
             execve(argv[1], &argv[1], environ);
             assertnlog2(0, "Exec failed, command not found", argv[1]);
+	    // shouldnt be reachable, but just in case:
+	    exit(ERRJOBEXEC);
         }
         else //Parent process
         {
 	    int status;
 	    wait(&status);
 	    if (WEXITSTATUS(status) == ERRJOBEXEC) {
-		/* failed to execute */
+
+		// if exit status is ERRJOBEXEC, command failed to execute
+		// create failed file
+		snprintf(tmpstr, sizeof(tmpstr), "%s/failed", dir);
+		f = fopen(tmpstr, "w");
+		assertnlog2(f != NULL, "fopen finished", tmpstr);
+		fclose(f);
+
 		exit (-1);
 	    }
 //	    printf("\n cmd %s pid %d exited %d with status %d (%d)\n", argv[1], childPID, WIFEXITED(status), WEXITSTATUS(status), status);
