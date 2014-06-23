@@ -50,4 +50,6 @@ Or you can add the following to your crontab to delete all reports older than 5 
 
 .B 7 5 * * *  jobexec find /var/tmp/jobexec/ -mtime +5 -delete -print
 
+jobexec does not currently support Unicode parameters. As a workaround you can put them in a shell script and inboke that script from jobexec. 
+ 
 

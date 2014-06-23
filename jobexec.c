@@ -17,6 +17,64 @@ extern char **environ;
 char dir[MAXDIRLEN];
 
 
+unsigned int getParamsLen(char **params) {
+   unsigned int c;
+   int j, i;
+   
+   c=0;
+   j=0; 
+   while (params[j] != NULL) {
+     c += 2; // quotation marks
+     c++; // space
+     i=0;
+     while (params[j][i] != '\0') {
+        c++;
+        i++;
+     }
+     j++;
+   }
+   return c; 
+}
+
+char **getShellParams(char **params) {
+   static char *newparams[3];
+   char *cmd;
+
+   newparams[0]=SHELL;
+   newparams[1]="-c";
+
+   int maxlen=getParamsLen(params);
+   maxlen += 1;
+
+   cmd=malloc(maxlen*sizeof(char)); 
+   assertnlog2(cmd != NULL, "Failed to malloc for shell execution of", params[1]);
+
+   int i,j,l;
+
+   i=0; j=0; 
+   while (params[j] != NULL && i < maxlen) {
+      l=0;
+      // if its a parameter to the command, use quotation marks
+      if (j != 0 && i < maxlen)  cmd[i++] = '"'; 
+      while (params[j][l] != '\0' && i < maxlen) {
+         if (params[j][l] == '"') cmd[i++] = '\\';
+         if ( i < maxlen ) cmd[i++] = params[j][l];
+         l++;
+      }
+      // close quotation marks
+      if (j != 0 && i < maxlen)  cmd[i++] = '"';
+      if (i < maxlen) cmd[i++] = ' '; 
+
+      j++;
+   }
+   assertnlog ( i < maxlen, "cmd maxlen calculation error!");
+
+   cmd[i]='\0';
+   newparams[2]=cmd;
+
+   return newparams;
+}
+
 void createOutputDir(int argc, char* argv[]){
 
    int l,i,j;
@@ -115,8 +173,19 @@ int main(int argc, char *argv[]) {
 
 	    close(fd1);
 	    close(fd2);
+	    char *cmd;
+	    char **params;
 
-            execve(argv[1], &argv[1], environ);
+            cmd=argv[1];
+            params=&argv[1];
+
+	    // if there is no path specified for command, invoke trhough shell
+	    if (cmd[0] != '/') {
+		cmd=SHELL;
+		params=getShellParams(params);
+	    }
+
+            execve(cmd, params, environ);
             assertnlog2(0, "Exec failed, command not found", argv[1]);
 	    // shouldnt be reachable, but just in case:
 	    exit(ERRJOBEXEC);
@@ -125,13 +194,14 @@ int main(int argc, char *argv[]) {
         {
 	    int status;
 	    wait(&status);
+
+	    // if exit status is ERRJOBEXEC, command failed to execute
 	    if (WEXITSTATUS(status) == ERRJOBEXEC) {
 
-		// if exit status is ERRJOBEXEC, command failed to execute
-		// create failed file
+		// create 'failed' file
 		snprintf(tmpstr, sizeof(tmpstr), "%s/failed", dir);
 		f = fopen(tmpstr, "w");
-		assertnlog2(f != NULL, "fopen finished", tmpstr);
+		assertnlog2(f != NULL, "fopen failed", tmpstr);
 		fclose(f);
 
 		exit (-1);
