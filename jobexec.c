@@ -192,9 +192,18 @@ int main(int argc, char *argv[]) {
         }
         else //Parent process
         {
+	    // create 'running' file
+	    snprintf(tmpstr, sizeof(tmpstr), "%s/running", dir);
+    	    f = fopen(tmpstr, "w");
+	    assertnlog2(f != NULL, "fopen failed", tmpstr);
+	    fprintf(f, "%d\n", childPID);
+	    fclose(f);
+
 	    int status;
 	    wait(&status);
 
+	    // delete 'running' file
+	    unlink(tmpstr);
 	    // if exit status is ERRJOBEXEC, command failed to execute
 	    if (WEXITSTATUS(status) == ERRJOBEXEC) {
 
