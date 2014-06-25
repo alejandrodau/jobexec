@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include "timer.h"
 #include "jobexec.h"
 
 #define SHELL "/bin/sh"
@@ -199,11 +200,24 @@ int main(int argc, char *argv[]) {
 	    fprintf(f, "%d\n", childPID);
 	    fclose(f);
 
+	    struct timeval timer;
+	    timerStart(&timer);
+	    
 	    int status;
 	    wait(&status);
 
+	    double exectime = timerGet(&timer);
 	    // delete 'running' file
 	    unlink(tmpstr);
+
+            // save 'exec_time'
+	    snprintf(tmpstr, sizeof(tmpstr), "%s/exec_time", dir);
+	    f = fopen(tmpstr, "w");
+	    assertnlog2(f != NULL, "fopen failed", tmpstr);
+	    fprintf(f, "%.6f\n", exectime);
+	    fclose(f);
+
+
 	    // if exit status is ERRJOBEXEC, command failed to execute
 	    if (WEXITSTATUS(status) == ERRJOBEXEC) {
 
