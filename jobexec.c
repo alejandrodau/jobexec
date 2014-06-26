@@ -9,15 +9,11 @@
 #include "timer.h"
 #include "jobexec.h"
 
-#define SYSLOG_ON 1
 #define SHELL "/bin/sh"
 #define BASEDIR "/var/tmp/jobexec"
 #define MAXDIRLEN 512
 #define MAXCMDLEN 512
 
-#ifdef SYSLOG_ON
-#include <syslog.h>
-#endif
 
 extern char **environ;
 char dir[MAXDIRLEN];
@@ -119,7 +115,7 @@ void createOutputDir(int argc, char* argv[]){
   l = strlen(dir);
   //shorten the cmdline string to be used in dir
   cmdline[16]='\0';
-  snprintf(&dir[l], sizeof(dir)-l, "/%ju.%s.%s", time(NULL), cmdline, hash );
+  snprintf(&dir[l], sizeof(dir)-l, "/%ju.%s-%s", time(NULL), cmdline, hash );
   if( access( dir, F_OK ) == -1 ) {
     // create dir
 //    printf("making dir: %s\n", dir);
@@ -209,7 +205,7 @@ int main(int argc, char *argv[]) {
 	    timerStart(&timer);
 	    
 #ifdef SYSLOG_ON
-	    syslog(LOG_INFO, "%s job started. Output: %s", argv[1], dir);
+	    syslog(LOG_INFO, "starting %s... Output: %s", argv[1], dir);
 #endif
 
 	    int status;
@@ -235,6 +231,10 @@ int main(int argc, char *argv[]) {
 		f = fopen(tmpstr, "w");
 		assertnlog2(f != NULL, "fopen failed", tmpstr);
 		fclose(f);
+
+#ifdef SYSLOG_ON
+	    	   syslog(LOG_ERR, "%s failed to execute. Output: %s", argv[1], dir);
+#endif
 
 		exit (-1);
 	    }

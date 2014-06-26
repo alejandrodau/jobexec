@@ -1,3 +1,9 @@
+#define SYSLOG_ON 1
+
+#ifdef SYSLOG_ON
+#include <syslog.h>
+#endif
+
 // in hash.c:
 char *hashstr(unsigned char *str, unsigned int len);
 
