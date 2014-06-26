@@ -9,10 +9,15 @@
 #include "timer.h"
 #include "jobexec.h"
 
+#define SYSLOG_ON 1
 #define SHELL "/bin/sh"
 #define BASEDIR "/var/tmp/jobexec"
 #define MAXDIRLEN 512
 #define MAXCMDLEN 512
+
+#ifdef SYSLOG_ON
+#include <syslog.h>
+#endif
 
 extern char **environ;
 char dir[MAXDIRLEN];
@@ -203,6 +208,10 @@ int main(int argc, char *argv[]) {
 	    struct timeval timer;
 	    timerStart(&timer);
 	    
+#ifdef SYSLOG_ON
+	    syslog(LOG_INFO, "%s job started. Output: %s", argv[1], dir);
+#endif
+
 	    int status;
 	    wait(&status);
 
