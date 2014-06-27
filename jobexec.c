@@ -9,11 +9,6 @@
 #include "timer.h"
 #include "jobexec.h"
 
-#define SHELL "/bin/sh"
-#define BASEDIR "/var/tmp/jobexec"
-#define MAXDIRLEN 512
-#define MAXCMDLEN 512
-
 
 extern char **environ;
 char dir[MAXDIRLEN];

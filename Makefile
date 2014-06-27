@@ -3,7 +3,7 @@ all: jobexec
 clean: 
 	rm jobexec *.o
 
-jobexec: jobexec.c assertnlog.c hash.c
+jobexec: jobexec.c assertnlog.c hash.c jobexec.h
 	gcc -o jobexec -O3 timer.c assertnlog.c hash.c jobexec.c
    
 install: jobexec
