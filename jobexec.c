@@ -10,6 +10,10 @@
 #include "jobexec.h"
 
 
+// JIDSIZE is the size of the string to be used as job id (directory)
+#define JIDSIZE 16
+
+
 extern char **environ;
 char dir[MAXDIRLEN];
 
@@ -100,7 +104,7 @@ void createOutputDir(int argc, char* argv[]){
   hash = hashstr(cmdline, 5);
   assertnlog(hash != NULL, "malloc hashstr");
 
-  // create jobexec dir
+  // create jobexec dir if it doesnt exist
   snprintf(dir, sizeof(dir), "%s", BASEDIR);
   if( access( dir, F_OK ) == -1 ) {
     assertnlog2(!mkdir(dir, S_IRWXU), "mkdir BASEDIR", dir);
@@ -109,13 +113,21 @@ void createOutputDir(int argc, char* argv[]){
 
   l = strlen(dir);
   //shorten the cmdline string to be used in dir
-  cmdline[16]='\0';
-  snprintf(&dir[l], sizeof(dir)-l, "/%ju.%s-%s", time(NULL), cmdline, hash );
+  //create jobid dir
+  cmdline[JIDSIZE]='\0';
+  snprintf(&dir[l], sizeof(dir)-l, "/%s-%s", cmdline, hash );
   if( access( dir, F_OK ) == -1 ) {
-    // create dir
-//    printf("making dir: %s\n", dir);
     assertnlog2(!mkdir(dir, 00755), "mkdir dir", dir);
   } 
+
+  // create timestamp dir
+  l = strlen(dir);
+  snprintf(&dir[l], sizeof(dir)-l, "/%ju", time(NULL) );
+  if( access( dir, F_OK ) == -1 ) {
+    // create dir
+    assertnlog2(!mkdir(dir, 00755), "mkdir dir", dir);
+  } 
+
 
 } 
 
