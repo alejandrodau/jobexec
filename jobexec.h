@@ -3,7 +3,7 @@
 #define SHELL "/bin/sh"
 #define BASEDIR "/var/tmp/jobexec"
 #define MAXDIRLEN 512
-#define MAXCMDLEN 512
+#define MAXCMDHASHLEN 512
 
 
 //-----------------------

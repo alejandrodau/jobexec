@@ -3,38 +3,39 @@
 #include <malloc.h>
 
 unsigned long hashdjb(unsigned char *str)
-    {
-        unsigned long hash = 5381;
-        int c;
+{
+    unsigned long hash = 5381;
+    int c;
 
-        while (c = *str++)
-            hash = hash * 33 + c; 
+    while (c = *str++)
+	hash = hash * 33 + c;
 
-        return hash;
-    }
+    return hash;
+}
 
-char *hashstr(unsigned char *str, unsigned int len) {
-   
-   unsigned long hash;
-   char *hashchar;
-   char table[]="0123456789abcdefghjkmnopqrstuvwx";
+char *hashstr(unsigned char *str, unsigned int len)
+{
 
-   hashchar=malloc( (len+1) * sizeof(char));
+    unsigned long hash;
+    char *hashchar;
+    char table[] = "0123456789abcdefghjkmnopqrstuvwx";
 
-   if (hashchar == NULL) return NULL;
+    hashchar = malloc((len + 1) * sizeof(char));
 
-   hash = hashdjb( str );
+    if (hashchar == NULL)
+	return NULL;
 
-   hashchar[len]='\0';
+    hash = hashdjb(str);
+
+    hashchar[len] = '\0';
 
 //debug:   printf("sizof table: %ld , hash: %ld\n", sizeof(table), hash);
 
-   while (len > 0) {
-     len--;
-     hashchar[len]=table[hash & 31];
-     hash = hash >> 5;
-   } 
+    while (len > 0) {
+	len--;
+	hashchar[len] = table[hash & 31];
+	hash = hash >> 5;
+    }
 
-   return hashchar;
-} 
-
+    return hashchar;
+}
