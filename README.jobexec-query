@@ -1,0 +1,9 @@
+
+Get last run and status from jobs executed via jobexec logging into /tmp/jobexec
+  Usage:
+
+      ./jobexec-query.pl [jobid] [timeout]
+      
+  Where jobid is the directory inside /var/tmp/jobexec where the job is being
+  logged, and [timeout] is the time in seconds to consider as max time since last run
+
