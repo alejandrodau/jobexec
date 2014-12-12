@@ -133,7 +133,7 @@ void createOutputDir(int argc, char *argv[])
     }
     // create timestamp dir
     l = strlen(dir);
-    snprintf(&dir[l], sizeof(dir) - l, "/%ju", time(NULL));
+    snprintf(&dir[l], sizeof(dir) - l, "/%zu", time(NULL));
     if (access(dir, F_OK) == -1) {
 	// create dir
 	assertnlog2(!mkdir(dir, 00755), "mkdir dir", dir);
